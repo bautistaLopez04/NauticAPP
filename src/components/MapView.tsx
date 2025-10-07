@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { Thermometer, Wind, CloudRain, Waves } from "lucide-react";
 
 // ==== ICONO PERSONALIZADO ====
 const icon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png", // ancla azul
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/25/25613.png",
+  iconSize: [26, 26],
+  iconAnchor: [13, 26],
 });
 
 // ==== LUGARES ====
@@ -28,14 +29,12 @@ type WeatherData = {
 };
 
 export default function MapView() {
-  const [selectedSpot, setSelectedSpot] = useState<any>(null);
   const [data, setData] = useState<Record<string, WeatherData>>({});
 
-  // === OBTENER DATOS DE CLIMA ===
+  // === OBTENER DATOS ===
   useEffect(() => {
     const fetchData = async () => {
       const results: Record<string, WeatherData> = {};
-
       for (const spot of SPOTS) {
         try {
           const weatherRes = await fetch(
@@ -60,16 +59,13 @@ export default function MapView() {
           results[spot.name] = {};
         }
       }
-
       setData(results);
     };
-
     fetchData();
   }, []);
 
   return (
     <div className="relative w-full h-full">
-      {/* === MAPA === */}
       <MapContainer
         center={[-37.6, -57.0]}
         zoom={7}
@@ -79,79 +75,64 @@ export default function MapView() {
           attribution='&copy; OpenStreetMap contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
         {SPOTS.map((spot) => (
-          <Marker
-            key={spot.name}
-            position={[spot.lat, spot.lon]}
-            icon={icon}
-            eventHandlers={{
-              click: () => setSelectedSpot(spot),
-            }}
-          />
+          <Marker key={spot.name} position={[spot.lat, spot.lon]} icon={icon}>
+            <Popup autoPan={false} closeButton={false}>
+              <div className="bg-white/95 rounded-2xl shadow-xl p-4 w-[220px] space-y-2">
+                <h3 className="text-base font-semibold text-[#0D3B66]">
+                  📍 {spot.name}
+                </h3>
+
+                {data[spot.name] ? (
+                  <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
+                    <InfoItem
+                      icon={<Thermometer className="w-4 h-4 text-[#0D3B66]" />}
+                      label="Temp"
+                      value={`${data[spot.name].temperature_2m}°C`}
+                    />
+                    <InfoItem
+                      icon={<Wind className="w-4 h-4 text-[#0D3B66]" />}
+                      label="Viento"
+                      value={`${data[spot.name].wind_speed_10m} m/s`}
+                    />
+                    <InfoItem
+                      icon={<CloudRain className="w-4 h-4 text-[#0D3B66]" />}
+                      label="Lluvia"
+                      value={`${data[spot.name].precipitation} mm`}
+                    />
+                    <InfoItem
+                      icon={<Waves className="w-4 h-4 text-[#0D3B66]" />}
+                      label="Olas"
+                      value={`${data[spot.name].wave_height} m`}
+                    />
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">Cargando datos...</p>
+                )}
+              </div>
+            </Popup>
+          </Marker>
         ))}
       </MapContainer>
+    </div>
+  );
+}
 
-      {/* === PANEL LATERAL DE INFORMACIÓN === */}
-      {selectedSpot && (
-        <div className="absolute top-0 right-0 h-full w-full sm:w-[400px] bg-white/95 backdrop-blur-md shadow-2xl border-l border-gray-200 z-10 animate-slide-in">
-          <div className="flex justify-between items-center p-4 border-b border-gray-300">
-            <h2 className="text-xl font-bold text-[#0D3B66]">
-              📍 {selectedSpot.name}
-            </h2>
-            <button
-              onClick={() => setSelectedSpot(null)}
-              className="btn btn-sm btn-circle btn-ghost text-gray-600"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="p-6 space-y-3 text-gray-700">
-            {data[selectedSpot.name] ? (
-              <>
-                <div className="flex justify-between items-center border-b pb-2">
-                  <span>🌡️ Temperatura</span>
-                  <span className="font-semibold text-[#0D3B66]">
-                    {data[selectedSpot.name].temperature_2m} °C
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center border-b pb-2">
-                  <span>💨 Viento</span>
-                  <span className="font-semibold text-[#0D3B66]">
-                    {data[selectedSpot.name].wind_speed_10m} m/s
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center border-b pb-2">
-                  <span>🌧️ Lluvia</span>
-                  <span className="font-semibold text-[#0D3B66]">
-                    {data[selectedSpot.name].precipitation} mm
-                  </span>
-                </div>
-
-                <div className="flex justify-between items-center border-b pb-2">
-                  <span>🌊 Altura de olas</span>
-                  <span className="font-semibold text-[#0D3B66]">
-                    {data[selectedSpot.name].wave_height} m
-                  </span>
-                </div>
-              </>
-            ) : (
-              <p className="text-gray-500">Cargando datos...</p>
-            )}
-          </div>
-
-          <div className="p-4 border-t border-gray-300">
-            <button
-              onClick={() => setSelectedSpot(null)}
-              className="btn bg-[#0D3B66] text-white border-none hover:bg-[#124b85] w-full"
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>
-      )}
+function InfoItem({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex flex-col items-center">
+      {icon}
+      <span className="text-[11px] text-gray-500">{label}</span>
+      <span className="text-[13px] font-medium text-[#0D3B66]">{value}</span>
     </div>
   );
 }
