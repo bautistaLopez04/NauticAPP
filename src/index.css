@@ -4,12 +4,37 @@
 
 @import "leaflet/dist/leaflet.css";
 
+/* Popup redondeado */
+.leaflet-popup-content-wrapper.spot-popup,
 .leaflet-popup-content-wrapper {
-  border-radius: 1rem !important;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-  transition: all 0.3s ease;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.15);
 }
 
-.leaflet-popup-tip {
-  background: white;
+/* Chips blancos (píldoras) bajo cada punto */
+.leaflet-tooltip.spot-chip {
+  background: rgba(255, 255, 255, 0.95);
+  color: #0d3b66;
+  border: 1px solid rgba(13, 59, 102, 0.15);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(13,59,102,0.12);
 }
+.leaflet-tooltip.spot-chip:before {
+  display: none;
+}
+
+/* Mini card del popup */
+.mini-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+.mini-title { font-weight: 700; font-size: 15px; color: #0d3b66; }
+.mini-chip { font-size: 12px; color: #5f6b7a; display:flex; gap:8px; align-items:center; }
+.mini-chip svg { width: 14px; height: 14px; color:#0d3b66 }
+.mini-button {
+  width: 100%; margin-top: 8px; border-radius: 10px; padding: 8px 10px;
+  font-weight: 700; font-size: 13px; color: #fff; background: #0d3b66;
+}
+.mini-button:hover { background: #124b85; }
+.mini-close { color:#95a1b0; }
+.mini-close:hover { color:#334155; }
