@@ -1,27 +1,28 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import MapView from "./components/MapView";
+import ForecastPage from "./components/ForecastPage";
 
-function App() {
+export default function App() {
   return (
-    <div className="flex flex-col h-screen">
-      {/* NAVBAR fijo arriba */}
-      <div className="flex-shrink-0">
+    <BrowserRouter>
+      <div className="flex min-h-screen flex-col bg-[#f7fafc]">
+        {/* 🔹 NAVBAR FIJO ARRIBA */}
         <Navbar />
-      </div>
 
-      {/* MAPA ocupa todo el espacio disponible */}
-      <main className="flex-grow">
-        <MapView />
-      </main>
+        {/* 🔹 CONTENIDO PRINCIPAL (espaciado para el navbar fijo) */}
+        <main className="flex-1 flex mt-16"> {/* mt-16 = 64px de alto del navbar */}
+          <Routes>
+            <Route path="/" element={<MapView />} />
+            <Route path="/forecast/:name" element={<ForecastPage />} />
+          </Routes>
+        </main>
 
-      {/* FOOTER fijo abajo */}
-      <div className="flex-shrink-0">
+        {/* 🔹 FOOTER */}
         <Footer />
       </div>
-    </div>
+    </BrowserRouter>
   );
 }
-
-export default App;
 

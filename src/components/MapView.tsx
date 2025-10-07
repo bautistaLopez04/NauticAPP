@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, CircleMarker, Tooltip, Popup } from "react-leaflet";
 import { Thermometer, Wind, CloudRain, Waves } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+import { useNavigate } from "react-router-dom";
 
 type Sport = "surf" | "kite";
 type Spot = {
   name: string;
   lat: number;
   lon: number;
-  sports: Sport[];        // <- para filtros
+  sports: Sport[];
 };
 
 const SPOTS: Spot[] = [
@@ -38,8 +39,9 @@ export default function MapView() {
   const [data, setData] = useState<Record<string, WeatherData>>({});
   const [selected, setSelected] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | Sport>("all");
+  const navigate = useNavigate();
 
-  // === datos meteo ===
+  // Carga datos actuales (meteo + mar)
   useEffect(() => {
     const fetchAll = async () => {
       const results: Record<string, WeatherData> = {};
@@ -70,7 +72,7 @@ export default function MapView() {
     fetchAll();
   }, []);
 
-  // === aplicar filtro ===
+  // Filtro por deporte
   const visibleSpots = useMemo(() => {
     if (filter === "all") return SPOTS;
     return SPOTS.filter(s => s.sports.includes(filter));
@@ -79,35 +81,29 @@ export default function MapView() {
   const selectedSpot = visibleSpots.find(s => s.name === selected);
 
   return (
-    <div className="relative h-full w-full">
-      {/* Filtros (único set, funcional) */}
-      <div className="absolute right-4 top-4 z-[400] flex gap-2">
-        <button
-          className={`rounded-md px-3 py-1.5 text-sm font-medium shadow ${filter==="all" ? "bg-[#0D3B66] text-white" : "bg-white/90 text-[#0D3B66] border"}`}
-          onClick={() => setFilter("all")}
-        >
-          Todos
-        </button>
-        <button
-          className={`rounded-md px-3 py-1.5 text-sm font-medium shadow ${filter==="surf" ? "bg-[#0D3B66] text-white" : "bg-white/90 text-[#0D3B66] border"}`}
-          onClick={() => setFilter("surf")}
-        >
-          Surf
-        </button>
-        <button
-          className={`rounded-md px-3 py-1.5 text-sm font-medium shadow ${filter==="kite" ? "bg-[#0D3B66] text-white" : "bg-white/90 text-[#0D3B66] border"}`}
-          onClick={() => setFilter("kite")}
-        >
-          Kite
-        </button>
+    <div className="relative flex-1 min-h-0 w-full">
+      {/* Filtros fijos bajo el navbar (navbar ~64px de alto) */}
+      <div className="fixed z-[1100] right-4 top-[calc(64px+16px)] pointer-events-none">
+        <div className="flex gap-2 pointer-events-auto">
+          <FilterButton active={filter === "all"}  onClick={() => setFilter("all")}  label="Todos" />
+          <FilterButton active={filter === "surf"} onClick={() => setFilter("surf")} label="Surf" />
+          <FilterButton active={filter === "kite"} onClick={() => setFilter("kite")} label="Kite" />
+        </div>
       </div>
 
-      <MapContainer center={[-37.8, -58.0]} zoom={7} className="h-full w-full z-0">
+      {/* Mapa: ocupa todo el alto disponible (dejamos margen para el footer) */}
+      <MapContainer
+        center={[-37.8, -58.0]}
+        zoom={7}
+        className="h-full w-full z-0"
+        style={{ minHeight: "calc(100vh - 180px)" }}
+      >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; OpenStreetMap contributors'
         />
 
+        {/* Marcadores */}
         {visibleSpots.map((spot) => (
           <CircleMarker
             key={spot.name}
@@ -116,18 +112,13 @@ export default function MapView() {
             pathOptions={{ color: "#0D3B66", weight: 2, fillColor: "#0D3B66", fillOpacity: 0.9 }}
             eventHandlers={{ click: () => setSelected(spot.name) }}
           >
-            {/* chip blanco DEBAJO del punto */}
-            <Tooltip
-              permanent
-              direction="bottom"
-              offset={[0, 14]}
-              className="spot-chip"
-            >
+            <Tooltip permanent direction="bottom" offset={[0, 14]} className="spot-chip">
               {spot.name}
             </Tooltip>
           </CircleMarker>
         ))}
 
+        {/* Popup con datos + CTA */}
         {selectedSpot && (
           <Popup
             position={[selectedSpot.lat, selectedSpot.lon]}
@@ -139,11 +130,7 @@ export default function MapView() {
             eventHandlers={{ remove: () => setSelected(null) }}
           >
             <div className="w-[260px] space-y-2">
-              <div className="mini-row">
-                <h3 className="mini-title">📍 {selectedSpot.name}</h3>
-                <button className="mini-close" onClick={() => setSelected(null)}>✕</button>
-              </div>
-
+              <h3 className="font-semibold text-[#0D3B66]">{selectedSpot.name}</h3>
               {data[selectedSpot.name] ? (
                 <div className="grid grid-cols-2 gap-3 text-sm text-gray-700">
                   <Info icon={<Thermometer className="w-4 h-4 text-[#0D3B66]" />} label="Temp"
@@ -160,8 +147,8 @@ export default function MapView() {
               )}
 
               <button
-                className="mini-button"
-                onClick={() => alert("Aquí irá la página de pronóstico completo")}
+                className="w-full bg-[#0D3B66] text-white py-2 rounded-md text-sm font-medium hover:bg-[#0b3355] transition"
+                onClick={() => navigate(`/forecast/${encodeURIComponent(selectedSpot.name)}`)}
               >
                 Ver Pronóstico Completo
               </button>
@@ -173,6 +160,25 @@ export default function MapView() {
   );
 }
 
+/* Botón filtro */
+function FilterButton({
+  label, active, onClick,
+}: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-md px-3 py-1.5 text-sm font-medium shadow transition-colors ${
+        active
+          ? "bg-[#0D3B66] text-white"
+          : "bg-white/90 text-[#0D3B66] border border-slate-300 hover:bg-white"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+/* Item mini info del popup */
 function Info({
   icon, label, value,
 }: { icon: React.ReactNode; label: string; value: string }) {
@@ -184,3 +190,4 @@ function Info({
     </div>
   );
 }
+
