@@ -18,9 +18,6 @@ export default function App() {
             <Route path="/forecast/:name" element={<ForecastPage />} />
           </Routes>
         </main>
-
-        {/* 🔹 FOOTER */}
-        <Footer />
       </div>
     </BrowserRouter>
   );
