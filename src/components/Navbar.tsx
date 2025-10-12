@@ -1,33 +1,59 @@
-import Image from "next/image"; // ❌ solo si usas Next.js (en tu caso NO, estás con Vite)
+import { Link, useLocation } from "react-router-dom";
 import logo from "../assets/nautic-logo.png";
 
 export default function Navbar() {
+  const location = useLocation();
+
+  const isActive = (path: string) =>
+    location.pathname === path
+      ? "text-[#F5C518] font-semibold"
+      : "text-white hover:text-[#F5C518] transition";
+
   return (
     <nav
       className="
         fixed top-0 inset-x-0 z-[1000]
-        bg-[#0D3B66]/95 backdrop-blur
-        text-white shadow-md
-        h-16
+        bg-[#0D3B66] text-white shadow-md h-16
+        flex items-center justify-between px-8
       "
       role="navigation"
       aria-label="Nautic main"
     >
-      <div className="mx-auto h-full max-w-7xl px-4 flex items-center justify-between">
-        {/* IZQUIERDA: Logo + brand */}
-        <div className="flex items-center gap-3">
-          <img src={logo} alt="Nautic" className="w-9 h-9 object-contain" />
-          <span className="text-lg font-bold tracking-wide">Nautic</span>
-        </div>
+      {/* IZQUIERDA: Logo */}
+      <div className="flex items-center">
+        <img
+          src={logo}
+          alt="Nautic"
+          className="h-10 w-auto object-contain"
+        />
+      </div>
 
-        {/* CENTRO: menú */}
-        <ul className="hidden md:flex items-center gap-6 text-sm">
-          <li><a className="hover:text-[#F5C518] transition-colors" href="#">Inicio</a></li>
-          <li><a className="hover:text-[#F5C518] transition-colors" href="#">Mapa</a></li>
-          <li><a className="hover:text-[#F5C518] transition-colors" href="#">Negocios</a></li>
+      {/* CENTRO: menú (centrado óptico) */}
+      <div className="absolute left-1/2 transform -translate-x-[45%]">
+        <ul className="flex items-center gap-10 text-sm">
+          <li>
+            <Link to="/" className={isActive("/")}>Inicio</Link>
+          </li>
+          <li>
+            <Link to="/map" className={isActive("/map")}>Mapa</Link>
+          </li>
+          <li>
+            <Link to="/negocios" className={isActive("/negocios")}>Negocios</Link>
+          </li>
         </ul>
       </div>
+
+      {/* DERECHA: Botón */}
+      <Link
+        to="/unite"
+        className="
+          border border-white/80 text-white px-4 py-2 rounded-md
+          text-sm font-medium hover:bg-white hover:text-[#0D3B66]
+          transition-colors
+        "
+      >
+        ¿Tenés un negocio? Unite a nosotros
+      </Link>
     </nav>
   );
 }
-
