@@ -28,7 +28,7 @@ export default function MapView() {
   const [day, setDay] = useState(0);
   const navigate = useNavigate();
 
-  // === 1️⃣ Cargar spots del backend ===
+  // 1️⃣ Cargar spots desde el backend
   useEffect(() => {
     const fetchSpots = async () => {
       const res = await fetch("http://127.0.0.1:8000/spots");
@@ -38,7 +38,7 @@ export default function MapView() {
     fetchSpots();
   }, []);
 
-  // === 2️⃣ Cargar datos meteo desde tu backend ===
+  // 2️⃣ Cargar datos meteo desde backend
   useEffect(() => {
     const fetchWeather = async () => {
       const results: Record<string, WeatherData> = {};
@@ -57,7 +57,7 @@ export default function MapView() {
     if (spots.length > 0) fetchWeather();
   }, [spots, day]);
 
-  // === 3️⃣ Filtrado por deporte ===
+  // 3️⃣ Filtro por deporte
   const visibleSpots = useMemo(() => {
     if (selectedSports.length === 0) return spots;
     return spots.filter((s) => s.sports.some((sport) => selectedSports.includes(sport)));
@@ -74,9 +74,11 @@ export default function MapView() {
 
   return (
     <div className="relative flex-1 min-h-0 w-full">
-      {/* FILTROS */}
+      {/* === FILTROS === */}
       <div className="fixed z-[1100] right-4 top-[calc(64px+16px)] pointer-events-none">
-        <div className="flex flex-col gap-2 pointer-events-auto items-end">
+        <div className="flex flex-col gap-3 pointer-events-auto items-end">
+
+          {/* Filtro de deporte */}
           <div className="flex gap-2">
             {["surf", "kite"].map((sport) => (
               <button
@@ -93,15 +95,15 @@ export default function MapView() {
             ))}
             <button
               onClick={resetSports}
-              className="w-[90px] px-4 py-2 rounded-md text-sm font-medium shadow transition-all border bg-white text-[#0D3B66] border-slate-300 hover:bg-slate-50"
+              className="w-[40px] px-2 py-2 rounded-md text-sm font-bold shadow transition-all border bg-white text-[#0D3B66] border-slate-300 hover:bg-slate-50"
             >
               ×
             </button>
           </div>
 
-          {/* Selector de día */}
+          {/* Filtro de día con DaisyUI select */}
           <select
-            className="bg-white border border-slate-300 text-[#0D3B66] rounded-md text-sm px-2 py-1"
+            className="select select-bordered select-sm bg-white text-[#0D3B66] w-[180px] border-slate-300"
             value={day}
             onChange={(e) => setDay(Number(e.target.value))}
           >
@@ -114,7 +116,7 @@ export default function MapView() {
         </div>
       </div>
 
-      {/* MAPA */}
+      {/* === MAPA === */}
       <MapContainer
         center={[-37.8, -58.0]}
         zoom={7}
@@ -173,6 +175,7 @@ export default function MapView() {
                       {pickSportForSpot(selectedSports, selectedSpot.sports).toUpperCase()}
                     </span>
                   </div>
+
                   <div className="grid grid-cols-2 gap-3 text-sm text-gray-700 mt-2">
                     <Info icon={<Thermometer className="w-4 h-4 text-[#0D3B66]" />} label="Temp prom." value={`${data[selectedSpot.name].temperature_2m}°C`} />
                     <Info icon={<Wind className="w-4 h-4 text-[#0D3B66]" />} label="Viento prom." value={`${data[selectedSpot.name].wind_speed_10m} m/s`} />
@@ -190,6 +193,56 @@ export default function MapView() {
               >
                 Ver Pronóstico Completo
               </button>
+
+              {/* === NEWSLETTER === */}
+              <div className="bg-white rounded-lg p-3 mt-3 border border-slate-200 shadow-sm">
+                <p className="text-[13px] text-[#0D3B66] font-medium mb-2 text-center">
+                  Recibí alertas de <span className="font-semibold">{selectedSpot.name}</span>
+                </p>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const email = (e.target as HTMLFormElement).email.value;
+                    alert(`Suscripto a ${selectedSpot.name}: ${email}`);
+                    (e.target as HTMLFormElement).reset();
+                  }}
+                  className="join w-full"
+                >
+                  <label className="input validator join-item flex-1 bg-white border border-slate-300">
+                    <svg
+                      className="h-[1em] opacity-50 mr-1"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                    >
+                      <g
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        strokeWidth="2.2"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                      </g>
+                    </svg>
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="mail@site.com"
+                      required
+                      className="bg-transparent text-sm flex-1 outline-none"
+                    />
+                  </label>
+                  <button
+  type="submit"
+  className="btn join-item bg-[#0D3B66] text-white border-[#0D3B66] hover:bg-[#0b3355] text-sm px-4 h-[40px] min-h-[40px]"
+>
+  Join
+</button>
+
+                </form>
+              </div>
             </div>
           </Popup>
         )}
