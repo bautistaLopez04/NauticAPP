@@ -1,16 +1,16 @@
 import { useState } from "react";
 
-export default function SportFilter({ onChange }) {
-  // Guarda los deportes seleccionados
+type Props = { onChange: (sports: string[]) => void };
+
+export default function SportFilter({ onChange }: Props) {
   const [selectedSports, setSelectedSports] = useState<string[]>([]);
 
   const toggleSport = (sport: string) => {
-    // Si ya estaba seleccionado, lo saca; si no, lo agrega
     setSelectedSports((prev) => {
       const updated = prev.includes(sport)
         ? prev.filter((s) => s !== sport)
         : [...prev, sport];
-      onChange(updated); // avisa al componente padre (MapView)
+      onChange(updated);
       return updated;
     });
   };
